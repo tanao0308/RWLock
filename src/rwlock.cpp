@@ -1,3 +1,7 @@
+/*
+Q: 为什么不用lock_guard代替unique_lock?
+A: condition_variable需要在wait时手动释放锁，而lock_guard没有这个功能
+*/
 #include<mutex>
 #include<condition_variable>
 #include "rwlock.h"
@@ -7,9 +11,12 @@ RWLock::RWLock(): reader_count(0), writing(0) {}
 
 void RWLock::lock_read()
 {
+	// mutex是互斥量，也叫互斥锁
+	// unique_lock是锁管理器
     unique_lock<mutex> lock(mtx);
     while(!can_read())
-        cond_read.wait(lock);//参数是什么
+        cond_read.wait(lock);
+	// cond_read.wait()等待时会自动释放互斥锁，并在唤醒后重新获得该锁。
 
     reader_count++;
 }
